@@ -1,0 +1,384 @@
+\documentclass[fleqn,10pt]{physiome}
+% Use option lineno for line numbers 
+
+\usepackage{amsfonts}
+\usepackage{fancyvrb}
+\usepackage{float}
+\usepackage{todonotes}
+\usepackage{setspace}
+\usepackage{fixltx2e}
+\usepackage{siunitx}
+\usepackage{epstopdf}
+\usepackage{natbibspacing}
+\usepackage{datetime}
+\usepackage{multirow}
+%%% \usepackage[pdftex,bookmarks]{hyperref}
+\usepackage{boxedminipage}
+
+\articletype{Retrospective}
+%% Choose from Original, Retrospective, Review, Letter
+
+\title{The cardiac Na\textsuperscript{+}/K\textsuperscript{+} ATPase: An updated, thermodynamically consistent model}
+
+\author[1][pan.m@unimelb.edu.au]{Michael Pan}
+\author[1]{Peter J. Gawthrop}
+\author[2]{Joseph Cursons}
+\author[3]{Kenneth Tran}
+\author[1,4]{Edmund J. Crampin}
+\affil[1]{Systems Biology Laboratory, School of Mathematics and Statistics, and Department of Biomedical Engineering, University of Melbourne, Parkville, Victoria 3010, Australia. }
+\affil[2]{Bioinformatics Division, Walter and Eliza Hall Institute of Medical Research, Parkville, Victoria 3052, Australia.}
+\affil[3]{Auckland Bioengineering Institute, University of Auckland, Auckland, New Zealand}
+\affil[4]{ARC Centre of Excellence in Convergent Bio-Nano Science and Technology, Melbourne School of Engineering, University of Melbourne, Parkville, Victoria 3010, Australia.}
+
+%% The following lines can be omitted when submitting;
+%% information will be added by editors
+\publicationdate{27 August 2020}
+\editor{Karin Lundengård}
+\curator{Anand Rampadarath}
+\submitteddate{25 August 2020}
+\accepteddate{25 August 2020}
+\citethisas{Pan et al. (2020) \\The cardiac Na\textsuperscript{+}/K\textsuperscript{+} ATPase: An updated, thermodynamically consistent model. Physiome.}{10.36903/physiome.12871070}
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The Na$^+$/K$^+$ ATPase is an essential component of cardiac electrophysiology, maintaining physiological Na$^+$ and K$^+$ concentrations over successive heart beats. \citet{terkildsen_balance_2007} developed a model of the ventricular myocyte Na$^+$/K$^+$ ATPase to study extracellular potassium accumulation during ischaemia, demonstrating the ability to recapitulate a wide range of experimental data, but unfortunately there was no archived code associated with the original manuscript. Here we detail an updated version of the model and provide CellML and MATLAB code to ensure reproducibility and reusability. We note some errors within the original formulation which have been corrected to ensure that the model is thermodynamically consistent, and although this required some reparameterisation, the resulting model still provides a good fit to experimental measurements that demonstrate the dependence of Na$^+$/K$^+$ ATPase pumping rate upon membrane voltage and metabolite concentrations. To demonstrate thermodynamic consistency we also developed a bond graph version of the model. We hope that these models will be useful for community efforts to assemble a whole-cell cardiomyocyte model which facilitates the investigation of cellular energetics.
+\end{abstract}
+
+\keywords{systems biology, electrophysiology, thermodynamics, bond graph}
+
+\primarypubs[10.36903/physiome.12871070]{bibliography}{terkildsen_balance_2007}
+
+\section{Introduction}
+
+Cardiomyocytes maintain Na$^+$ and K$^+$ ions within their physiological concentration range, in part by using Na$^+$/K$^+$ ATPases located on their plasma membranes. The Na$^+$/K$^+$ ATPase is an electrogenic ion pump that uses energy from ATP hydrolysis to drive the transport of Na$^+$ and K$^+$ ions against an electrochemical gradient. A previous model of the cardiomyocyte Na$^+$/K$^+$ ATPase was developed by \citet{terkildsen_balance_2007} and subsequently incorporated into a whole-cell cardiomyocyte model to demonstrate that reduced Na$^+$/K$^+$ ATPase activity plays a dominant role in extracellular potassium accumulation during ischaemia \citep{terkildsen_balance_2007,terkildsen_modelling_2006}. In this manuscript the Na$^+$/K$^+$ ATPase model of \citet{terkildsen_balance_2007} will subsequently be referred to as the Terkildsen \textit{et al.} model.
+
+The Na$^+$/K$^+$ ATPase model presented in \citet{terkildsen_balance_2007} was based upon an earlier implementation which proposed thermodynamic constraints and a lumping scheme for model simplification \citep{smith_development_2004}. A key development was that the Terkildsen \textit{et al.} model could reproduce a wider range of data which captured the dependence of the pump current upon membrane voltage \citep{nakao_[na]_1989}, extracellular sodium \citep{nakao_[na]_1989}, intracellular sodium \citep{hansen_dependence_2002}, extracellular potassium \citep{nakao_[na]_1989} and MgATP \citep{friedrich_na+k+-atpase_1996}. Unfortunately the cycling velocity figures presented within the original paper are not reproducible using information supplied in the figure legends \citep[Fig. 2]{terkildsen_balance_2007} and code used to generate those figures was not publicly archived. These issues are exacerbated by apparent errors within the reported equations and parameter values (further described in \autoref{sec:modifications}) which result in physical and thermodynamic inconsistencies.
+
+Here we address these issues, updating the model to ensure that it is thermodynamically consistent, and archiving MATLAB and CellML \citep{lloyd_cellml:_2004} code for reproducibility. This required the modification of several equations (\autoref{sec:modifications}) and re-parameterisation through fitting to the original data (\autoref{sec:raparameterisation}). To verify the physical plausibility of the updated model we have also developed a bond graph version \citep{oster_network_1971,gawthrop_energy-based_2014}, and we refer readers to \citet{gawthrop_metamodelling:_1996}; \citet{borutzky_bond_2010}; and \citet{gawthrop_bond-graph_2007} for further information on bond graph theory. Given the thermodynamic consistency of our updated model we believe that it is particularly well-suited for incorporation into community efforts for developing a thermodynamic model of a cardiomyocyte to ultimately study whole-heart cardiac energetics. 
+
+
+\section{Modifications}
+\label{sec:modifications}
+The Terkildsen \textit{et al.} model uses the Post-Albers cycle \citep{apell_electrogenic_1989}, a model in which sodium and potassium ions bind individually on one side of the membrane, and unbind on the other side (\autoref{fig:NaK_scheme}). The full Post-Albers cycle was simplified to reduce computational complexity by assuming that faster reactions are in rapid equilibrium, reducing the full 15-state model to a four-state model with eight modified rate constants \citep{smith_development_2004}. The entire cycle was then assumed to be in steady-state such that the model simplified to a single equation for cycling velocity, with metabolite dependence incorporated in a manner that accounted for thermodynamic constraints. We identified three issues while reimplementing the Terkildsen \textit{et al}. model, and made several modifications to remedy these issues:
+
+\textbf{Issue 1:} Equilibrium constants were inconsistent with the number of binding sites. For identical binding sites the kinetic rate constants are typically assumed to be proportional to the number of sites available for binding/unbinding \citep{keener_mathematical_2009} and we modified the reaction scheme from \citet{terkildsen_balance_2007} to achieve this (\textit{red parameters within} \autoref{fig:NaK_scheme}).
+
+\begin{figure}
+\centering
+\includegraphics[width=\linewidth]{Terkildsen_NaK_network.eps}
+\caption{\textbf{Reaction scheme of the cardiac Na$^+$/K$^+$ ATPase model.} Numbers for each pump state (\textit{blue boxes}) and reaction names (\textit{green}) are labelled, with corrected parameters shown in red.}
+\label{fig:NaK_scheme}
+\end{figure}
+
+\textbf{Issue 2:} The detailed balance constraint used during fitting procedure appears to have used an incorrect parameter value with important consequences on the thermodynamic consistency of the model. This constraint relates the kinetic constants defined in \autoref{fig:NaK_scheme}:
+\begin{align}
+	\frac{k_1^+ k_2^+ k_3^+ k_4^+ K_{d,\text{Na}_e}^0(K_{d,\text{Na}_e})^2 (K_{d,\text{K}_i})^2}
+  {k_1^- k_2^- k_3^- k_4^- K_{d,\text{Na}_i}^0 (K_{d,\text{Na}_i})^2 (K_{d,\text{K}_e})^2 K_{d,\text{MgATP}}} = \exp\left( -\frac{\Delta G_\text{MgATP}^0}{RT} \right)
+  \label{eq:detailed_balance}
+\end{align}
+where $R=8.314$ J/mol/K is the universal gas constant, $T$ is the absolute temperature, and $\Delta G_\mathrm{MgATP}^0$ is the standard free energy of MgATP hydrolysis at pH 0. It appears that \citet{terkildsen_balance_2007} started with a standard free energy of $-29.6\si{kJ/mol}$ at pH 7, but adjusted to a physiological pH rather than pH 0. As a result, substituting the model parameter values into equation \eqref{eq:detailed_balance} results in $\Delta G_\mathrm{MgATP}^0 = -30.2\si{kJ/mol}$, which is inconsistent with the typical standard free energy of $11.9\si{kJ/mol}$ at 311K \citep{tran_thermodynamic_2009,guynn_equilibrium_1973}. At a temperature of 310K this results in an overall equilibrium constant over $10^7$-fold greater than the correct value. Thus we use $\Delta G_\mathrm{MgATP}^0 = 11.9\si{kJ/mol}$ within the detailed balance constraint.
+
+\textbf{Issue 3:} The lumping scheme used to reduce the 15-state model to a 4-state model with modified kinetic constants was similar to \citet{smith_development_2004}, however with the updated assignment of electrical dependence in \citet{terkildsen_balance_2007} some expressions were not applicable. As a result, expressions for several modified rate constants ($\alpha_1^+$, $\alpha_3^+$, $\alpha_2^-$ and $\alpha_4^-$) were incorrect, leading to inaccurate representations of pump kinetics. We have corrected the equations for these modified rate constants:
+\begin{align}
+	\alpha_1^+ &= \frac{k_1^+  \tilde{\text{Na}}_{i,1}\tilde{\text{Na}}_{i,2}^2}{\tilde{\text{Na}}_{i,1}\tilde{\text{Na}}_{i,2}^2 + (1 + \tilde{\text{Na}}_{i,2})^2 + (1 + \tilde{\text{K}}_i)^2 -1} \\
+	\alpha_3^+ &= \frac{k_3^+ \tilde{\text{K}}_e^{2}}{\tilde{\text{Na}}_{e,1}\tilde{\text{Na}}_{e,2}^2 + (1 + \tilde{\text{Na}}_{e,2})^2 + (1 + \tilde{\text{K}}_e)^2 -1 } \\
+	\alpha_2^-&= \frac{k_2^- \tilde{\text{Na}}_{e,1}\tilde{\text{Na}}_{e,2}^2}{\tilde{\text{Na}}_{e,1}\tilde{\text{Na}}_{e,2}^2 + (1 + \tilde{\text{Na}}_{e,2})^2 + (1 + \tilde{\text{K}}_e)^2 -1} \\
+	\alpha_4^- &= \frac{k_4^- \tilde{\text{K}}_i^2}{\tilde{\text{Na}}_{i,1}\tilde{\text{Na}}_{i,2}^2 + (1 + \tilde{\text{Na}}_{i,2})^2 + (1 + \tilde{\text{K}}_i)^2 -1}
+\end{align}
+where
+\begin{align}
+	&\tilde{\text{Na}}_{i,1} = \frac{\mathrm{[Na^+]_i}}{K_{d,\text{Na}_i}^0 e^{\Delta FV/RT}} 
+	&&\tilde{\text{Na}}_{i,2} = \frac{\mathrm{[Na^+]_i}}{K_{d,\text{Na}_i}} \\
+	&\tilde{\text{Na}}_{e,1} = \frac{\mathrm{[Na^+]_e}}{K_{d,\text{Na}_e^0} e^{(1+\Delta) zFV/RT}} 
+	&&\tilde{\text{Na}}_{e,2} = \frac{\mathrm{[Na^+]_e}}{K_{d,\text{Na}_e}} \\
+	&\tilde{\text{K}}_i = \frac{\mathrm{[K^+]_i}}{K_{d,\text{K}_i}} 
+	&&\tilde{\text{K}}_e = \frac{\mathrm{[K^+]_e}}{K_{d,\text{K}_e}} 
+\end{align}
+and $\Delta$ is the unit of charge translocated by the final sodium binding reaction R5. We derive an expression for $\alpha_1^+$, and expressions for the other modified rate constants follow similarly. Since the pump states 1 to 6 are lumped together, the constant $k_1^+$ is scaled according to the ratio between the amount of state 6 and the total amount of states 1--6. If we represent $x_i$ as the molar amount of state $i$, then:
+\begin{align}
+	\alpha_1^+ &= k_1^+ \frac{x_6}{x_6 + x_5 + x_4 + x_3 + x_2 + x_1} \notag \\
+	&= k_1^+ \frac{1}{1 + x_5/x_6 + x_4/x_6 + x_3/x_6 + x_2/x_6 + x_1/x_6} \notag  \\
+	&= \frac{k_1^+}{1 + 2\tilde{\text{Na}}_{i,1}^{-1} + 2\tilde{\text{Na}}_{i,1}^{-1}\tilde{\text{Na}}_{i,2}^{-1} + \tilde{\text{Na}}_{i,1}^{-1}\tilde{\text{Na}}_{i,2}^{-2} + 2\tilde{\text{Na}}_{i,1}^{-1}\tilde{\text{Na}}_{i,2}^{-2}\tilde{\text{K}}_i + \tilde{\text{Na}}_{i,1}^{-1}\tilde{\text{Na}}_{i,2}^{-2}\tilde{\text{K}}_i^2} \notag  \\
+	&= \frac{k_1^+  \tilde{\text{Na}}_{i,1}\tilde{\text{Na}}_{i,2}^2}{\tilde{\text{Na}}_{i,1}\tilde{\text{Na}}_{i,2}^2 + (1 + \tilde{\text{Na}}_{i,2})^2 + (1 + \tilde{\text{K}}_i)^2 -1}
+\end{align}
+
+Because it was not possible to fix the above issues without significantly changing the kinetics of the model, we subsequently had to reparameterise the Terkildsen \textit{et al}. model such that it would be physically and thermodynamically consistent. In subsequent sections, we shall refer to the reparameterised model with updated equations as the ``updated model'' and the model with equations and parameters described in \citet{terkildsen_balance_2007} as the ``original model''.
+
+\section{Reparameterisation of the model}
+\label{sec:raparameterisation}
+Using the updated model's equations, we fitted parameters to data from  \citet{terkildsen_balance_2007,terkildsen_modelling_2006}. After setting $\Delta G_\mathrm{MgATP}^0$ to $11.9\si{kJ/mol}$ in the thermodynamic constraint, Equation \eqref{eq:detailed_balance}, we parameterised the updated model using similar methods to the original model \citep{terkildsen_modelling_2006} which minimised an objective function describing divergence of the model from experimental data. Minor changes to the fitting procedure include:
+\begin{enumerate}
+	\item The weighting for extracellular potassium above 5.4 mM for the data of \citet{nakao_[na]_1989} was increased from $6\times$ to $15\times$ to obtain a reasonable fit at physiological concentrations.
+	\item To ensure that cycling velocity magnitudes matched \citet{nakao_[na]_1989}, the curve for $[\mathrm{Na}]_e=150 \si{mM}$ was fitted without normalisation.
+	\item Rather than using a local optimiser with literature sources for initial parameter estimates, we minimised the objective function by using particle swarm optimisation \citep{kennedy_particle_1995} followed by a local optimiser to find a global minimum.
+\end{enumerate}
+The updated model provides good fits to each data source (Figures \ref{fig:fitting} \& \ref{fig:metabolite_dependence}), and the quality of fits are comparable to \citet{terkildsen_modelling_2006}, although we achieved a slightly worse fit at lower extracellular sodium concentrations (\autoref{fig:fitting}(A)). It should be noted, however, that our model appears to be more consistent with experimental data that suggest saturated cycling velocity at positive membrane potentials is relatively insensitive to extracellular sodium (\autoref{fig:fitting}(B)) \citep{nakao_[na]_1989}. Updated model parameters are given in \autoref{tab:Terkildsen_parameters} of \autoref{sec:parameters}.
+
+\begin{figure}
+	\centering
+	\begin{tabular}{l c}
+		{\Large\textbf{A}} & \multirow{4}{0.4\linewidth}[0cm]{
+			\begin{minipage}{\linewidth}
+				\vspace{2cm}
+				\begin{align*}
+				\mathrm{[Na^+]_i} &= 50\si{mM} \\
+				\mathrm{[K^+]_i} &= 0\si{mM} \\
+				\mathrm{[K^+]_e} &= 5.4\si{mM} \\
+				\mathrm{pH} &= 7.4 \\
+				\mathrm{[Pi]_{tot}} &= 0\si{mM} \\
+				\mathrm{[MgATP]} &= 10\si{mM} \\
+				\mathrm{[MgADP]} &= 0\si{mM} \\
+				T &= 310\si{K}
+				\end{align*}
+		\end{minipage} } \\
+		\includegraphics[width=0.4\linewidth]{Terkildsen_kinetic_fit_KA_comparison.eps} &
+		\\
+		{\Large\textbf{B}} &   \\
+		\includegraphics[width=0.4\linewidth]{Terkildsen_fit_NG_I.eps} & 
+	\end{tabular}
+	\caption{\textbf{Model fit of the updated cardiac Na$^+$/K$^+$ ATPase model to current-voltage measurements.} \textbf{(A)} Comparison of the model to extracellular sodium and voltage data \citep[Fig. 3]{nakao_[na]_1989}, with cycling velocities scaled to a value of $55\si{s^{-1}}$ at $V = 40\si{mV}$. \textbf{(B)} Comparison of the model to whole-cell current measurements \citep[Fig. 2(a)]{nakao_[na]_1989}.} 
+	\label{fig:fitting}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\begin{tabular}{l c}
+		{\Large\textbf{A}} &  \multirow{2}{0.4\linewidth}[1cm]{
+			\begin{minipage}{\linewidth}
+				\small
+				\begin{align*}
+				V &= 0\si{mV}\\ 
+				\mathrm{[Na^+]_e} &= 0\si{mM}\\ 
+				\mathrm{[K^+]_i} &= 80\si{mM}\\ 
+				\mathrm{[K^+]_e} &= 15\si{mM}\\ 
+				\mathrm{pH} &= 7.2\\ 
+				\mathrm{[Pi]_{tot}} &= 1\si{mM}\\ 
+				\mathrm{[MgATP]} &= 2\si{mM}\\ 
+				\mathrm{[MgADP]} &= 0\si{mM}\\ 
+				T &= 308\si{K}
+				\end{align*}
+		\end{minipage}}\\
+		\includegraphics[width=0.4\linewidth]{Terkildsen_fit_Hansen_Nai_comparison.eps} & \\[0.2cm]  
+		{\Large\textbf{B}} &  \multirow{2}{0.4\linewidth}[1cm]{
+			\begin{minipage}{\linewidth}
+				\small
+				\begin{align*}
+				V &= 0\si{mV}\\ 
+				\mathrm{[Na^+]_i} &= 50\si{mM}\\ 
+				\mathrm{[Na^+]_e} &= 150\si{mM}\\ 
+				\mathrm{[K^+]_i} &= 140\si{mM}\\ 
+				\mathrm{pH} &= 7.4\\ 
+				\mathrm{[Pi]_{tot}} &= 0.5\si{mM}\\ 
+				\mathrm{[MgATP]} &= 10\si{mM}\\ 
+				\mathrm{[MgADP]} &= 0.02\si{mM}\\ 
+				T &= 310\si{K}
+				\end{align*}
+		\end{minipage}}\\
+		\includegraphics[width=0.4\linewidth]{Terkildsen_fit_NG_Ke_comparison.eps} & \\[0.2cm]  
+		{\Large\textbf{C}} & \multirow{2}{0.4\linewidth}[1cm]{
+			\begin{minipage}{\linewidth}
+				\small
+				\begin{align*}
+				V &= 0\si{mV}\\ 
+				\mathrm{[Na^+]_i} &= 40\si{mM}\\ 
+				\mathrm{[Na^+]_e} &= 0\si{mM}\\ 
+				\mathrm{[K^+]_i} &= 0\si{mM}\\ 
+				\mathrm{[K^+]_e} &= 5\si{mM}\\ 
+				\mathrm{pH} &= 7.4\\ 
+				\mathrm{[Pi]_{tot}} &= 0\si{mM}\\ 
+				\mathrm{[MgADP]} &= 0\si{mM}\\ 
+				T &= 297\si{K}
+				\end{align*}
+		\end{minipage}}\\  
+		\includegraphics[width=0.4\linewidth]{Terkildsen_fit_Friedrich_MgATP_comparison.eps} & 
+	\end{tabular}
+	\caption{\textbf{Model fit of the updated cardiac Na$^+$/K$^+$ ATPase model to metabolite dependence data.} Simulation conditions are displayed on the right of each figure. \textbf{(A)} Comparison of the model to data with varying intracellular sodium concentrations \citep[Fig. 7(a)]{hansen_dependence_2002}, normalised to the cycling velocity at $\mathrm{[Na]_i = 50\si{mM}}$. \textbf{(B)} Comparison of the model to data with varying extracellular potassium \citep[Fig. 11(a)]{nakao_[na]_1989}, normalised to the cycling velocity at $\mathrm{[K]_e = 5.4\si{mM}}$. \textbf{(C) } Comparison of the model to data with varying ATP \citep[Fig. 3(b)]{friedrich_na+k+-atpase_1996}, normalised to the cycling velocity at $\mathrm{[MgATP] = 0.6\si{mM}}$.}
+	\label{fig:metabolite_dependence}
+\end{figure}
+
+The response of the updated model to an action potential input was simulated by using an action potential waveform generated from the Luo and Rudy (2000) model \citep{faber_action_2000,luo_dynamic_1994} (\autoref{fig:updated_original_comp}(A)). The original and updated models behave almost identically at resting membrane potentials, but the updated model has a much higher current during the action potential (\autoref{fig:updated_original_comp}(B)). As noted in  \citet{terkildsen_modelling_2006}, the current of the pump is far lower at physiological intracellular sodium concentrations, thus the pump density needs to be appropriately scaled to be compatible with the Luo-Rudy model. Scaled versions of the Na$^+$/K$^+$ ATPase current within the updated and original models are qualitatively similar to that described using the Luo-Rudy equations \citep{faber_action_2000,luo_dynamic_1994}, however there are some differences in the resulting waveforms (\autoref{fig:updated_original_comp}(C)). In particular, the updated model behaves more similarly to the Luo-Rudy Na$^+$/K$^+$ ATPase formulation because it has a more variable current, and thus we hypothesise that under physiological concentrations, the updated model is more compatible with the whole-cell model by Luo and Rudy. A CellML version of the updated model is included with this manuscript.
+
+\begin{figure}
+\centering
+\begin{tabular}{l l l}
+{\Large\textbf{A}} & {\Large\textbf{B}} & {\Large\textbf{C}} \\
+\includegraphics[width=0.3\linewidth]{LRd_AP_waveform.eps} &
+\includegraphics[width=0.3\linewidth]{NaK_current.eps} &
+\includegraphics[width=0.3\linewidth]{NaK_current_scaled.eps} 
+\end{tabular}
+\caption{\textbf{A comparison of the updated cardiac Na$^+$/K$^+$ ATPase model to existing models.} \textbf{(A)} The action potential waveform used for pump simulation \citep{faber_action_2000}; \textbf{(B)} The Na$^+$/K$^+$ ATPase currents of the original and updated models; \textbf{(C)} A comparison of scaled versions of the updated and original models against the Na$^+$/K$^+$ ATPase model in \citet{faber_action_2000}. The pump density was increased by a factor of 3.4 in the updated model, and by a factor of 3.9 in the original model. $\mathrm{[Na^+]_i} = 10\si{mM}$, $\mathrm{[Na^+]_e} = 140\si{mM}$, $\mathrm{[K^+]_i} = 145\si{mM}$, $\mathrm{[K^+]_e} = 5.4\si{mM}$, $\mathrm{pH} = 7.095$, $\mathrm{[Pi]_{tot}} = 0.8\si{mM}$, $\mathrm{[MgATP]} = 6.95\si{mM}$, $\mathrm{[MgADP]} = 0.035\si{mM}$, $T = 310\si{K}$.}
+\label{fig:updated_original_comp}
+\end{figure}
+
+\begin{figure}
+	\centering
+	\includegraphics[width=0.7\linewidth]{CellML_comp.eps}
+	\caption{\textbf{A comparison of the kinetic and bond graph cardiac Na$^+$/K$^+$ models.} $\mathrm{[Na^+]_i} = 50\si{mM}$, $\mathrm{[Na^+]_e} = 150\si{mM}$, $\mathrm{[K^+]_i} = 0\si{mM}$, $\mathrm{[K^+]_e} = 5.4\si{mM}$, $\mathrm{pH} = 7.4$, $\mathrm{[Pi]_{tot}} = 0\si{mM}$, $\mathrm{[MgATP]} = 10\si{mM}$, $\mathrm{[MgADP]} = 0\si{mM}$, $T = 310\si{K}$.  The bond graph model is formulated using concentration ratios thus zero concentrations were approximated by a concentration of 0.001mM to avoid numerical errors.}
+	\label{fig:kinetic_BG_comp}
+\end{figure}
+
+\section{Bond graph model}
+To verify the physical plausibility of the updated model and to aid incorporation into larger models of cardiac energetics, we have also developed a bond graph version. Bond graphs are an energy-based approach to modelling physical systems, thus they ensure thermodynamic consistency \citep{gawthrop_energy-based_2014}. The structure of the bond graph model is given in \autoref{fig:Terkildsen_NaK} of \autoref{sec:BG_structure}. The process of converting the model into a bond graph required two notable changes to its representation. Firstly, the bond graph model represents the full unsimplified biochemical cycle, and reactions originally assumed to be in rapid equilibrium were replaced by reactions with fast kinetic parameters that conferred the same equilibrium constant. Thus the bond graph model contains 15 states, and is a close but not exact approximation of the kinetic model. Secondly, because kinetic parameters are often thermodynamically inconsistent \citep{liebermeister_modular_2010}, the bond graph approach requires chemical reaction networks to be specified using a different set of parameters: the reaction rate constant $\kappa$ and species thermodynamic constant $K$ \citep{gawthrop_energy-based_2014}. These parameters always describe thermodynamically consistent systems, regardless of their numerical value. As a result, we converted the kinetic parameters of our model into an equivalent set of bond graph parameters \citep{gawthrop_hierarchical_2015} by using the following matrix equation:
+\begin{align}
+	\textbf{Ln}(\mathbf{k}) = \mathbf{M} \textbf{Ln}(\mathbf{W} \boldsymbol{\lambda}) \label{eq:bg_general}
+\end{align}
+where $\textbf{Ln}$ is the element-wise logarithm operator. The vector $\mathbf{k}$ contains the kinetic parameters, $\boldsymbol{\lambda}$ contains the bond graph parameters, and $\mathbf{M}$ contains stoichiometric information. The partitions of these matrices are defined as:
+\begin{align}
+	\textbf{k} = \begin{bmatrix}
+	k^+ \\ k^- \\ k^c
+	\end{bmatrix}, \quad
+	\textbf{M} = \left[ \begin{array}{c | c}
+	I_{n_r \times n_r} & {N^f}^T \\ \hline
+	I_{n_r \times n_r} & {N^r}^T \\ \hline
+	0 & N^c
+	\end{array} \right], \quad
+	\boldsymbol{\lambda} = \begin{bmatrix}
+	\kappa \\ K
+	\end{bmatrix}
+	\label{eq:standard}
+\end{align}
+where
+\begin{align}
+	k^+ &= \text{column vector of forward rate constants} \\
+	k^- &= \text{column vector of reverse rate constants} \\
+	\kappa &= \text{column vector of reaction rate constants} \\
+	K &= \text{column vector of species thermodynamic constants} \\
+	N^f &= \text{forward stoichiometric matrix} \\
+	N^r &= \text{reverse stoichiometric matrix}
+\end{align}
+The matrices $k^c$ and $N^c$ were used to enforce further constraints between the thermodynamic constants of different species, in particular the equilibria of individual ions present within different compartments, and the equilibrium constant of ATP hydrolysis. Assuming that equation \eqref{eq:bg_general} can be solved, one possible solution is given by
+\begin{align}
+	\boldsymbol{\lambda_0 } = \mathbf{W}^{-1} \textbf{Exp} (\mathbf{M}^\dagger \textbf{Ln} (\mathbf{k}))
+\end{align}
+where $\textbf{Exp}$ is the element-wise exponential operator and $\mathbf{M}^\dagger$ is the Moore-Penrose pseudo-inverse of $\mathbf{M}$. Since the bond graph framework is energy-based, species must be expressed as molar amounts rather than concentrations to adequately compare energies in different compartments. Therefore we use the diagonal matrix $\mathbf{W}$ to scale the species thermodynamic constants according to the volume of the compartments they reside in. For consistency with  \citet{terkildsen_balance_2007}, an intracellular volume of $W_i = 38\si{pL}$ was used for the species $\mathrm{Na_i^+}$, $\mathrm{K_i^+}$, $\mathrm{MgATP}$, $\mathrm{MgADP}$, $\mathrm{Pi}$ and $\mathrm{H^+}$, an extracellular volume of $W_e = 5.182\si{pL}$ was used for $\mathrm{Na_e^+}$, $\mathrm{K_e^+}$, and a constant of 1 was used for each of the pump states.
+
+The bond graph model was simulated under the conditions described in \autoref{fig:fitting}(A) to reproduce the curve for $\mathrm{[Na^+]_e}=150\si{mM}$, using a slowly increasing membrane voltage to induce quasi-steady-state behaviour. There is a high degree of correspondence between the kinetic and bond graph models (\autoref{fig:kinetic_BG_comp}). The closeness of the two models suggests that the fast kinetic constants are good approximations of reactions in rapid equilibrium, although we note that the deviation between the bond graph and kinetic models increases slightly at higher cycling velocities when the faster reactions begin to limit flux through the cycle. CellML code describing the bond graph model and reproducing the curve in \autoref{fig:kinetic_BG_comp} is provided with this manuscript.
+
+\section{Conclusion}
+In this manuscript we describe an updated model for the cardiac Na$^+$/K$^+$ ATPase model originally developed by  \citet{terkildsen_balance_2007}. We have corrected errors with the original model formulation and refitted necessary parameters to ensure that the resulting model is thermodynamically consistent while still recapitulating a wide range of experimental data. We note that the updated model has a natural bond graph representation, and include CellML and MATLAB code for both the kinetic and bond graph models to aid reproducibility. We believe that the thermodynamic consistency and improved reusability of our updated model make it ideal for incorporation into future whole-cell models to study cardiac cell energetics.
+
+\section{Instructions for running code}
+\subsection{MATLAB}
+The MATLAB code is located in the \texttt{MATLAB/code} directory. Figures \ref{fig:fitting}--\ref{fig:metabolite_dependence} can be generated by running the script \texttt{fit\_NaK\_parameters.m}. \autoref{fig:updated_original_comp} can be generated by running \texttt{NaK\_sim.m}, and \autoref{fig:kinetic_BG_comp} can be generated by running \texttt{CellML\_model\_comparison.m}.
+
+\subsection{CellML}
+The figures within this paper can be generated by opening the SED-ML files in OpenCOR. The corresponding figures are referenced within the file names.
+
+\section{Acknowledgements}
+This research was supported in part by the Australian Government through the Australian Research Council's Discovery Projects funding scheme (project DP170101358), an Australian Government Research Training Program Scholarship to M.P., and a Research Fellowship (1692) from the Heart Foundation of New Zealand to K.T.
+
+\bibliography{bibliography}
+
+\newpage
+
+\appendix
+\section{Parameters}
+\label{sec:parameters}
+\begin{table}[H]
+	\caption{\textbf{Kinetic parameters for the updated cardiac Na$^+$/K$^+$ ATPase model.} Refer to \autoref{fig:NaK_scheme} for a schematic.}
+	\centering
+	\bgroup
+	\def\arraystretch{1.3}
+	\begin{tabular}{c p{0.48\linewidth} l}
+		\toprule
+		\textbf{Parameter} & \textbf{Description}& \textbf{Value} \\ \midrule
+		$k_1^+$ & Forward rate constant of reaction R6 & $1423.2\ \si{s^{-1}}$\\ 
+		$k_1^-$ & Reverse rate constant of reaction R6 & $225.9048\ \si{s^{-1}}$\\ 
+		$k_2^+$ & Forward rate constant of reaction R7 & $11564.8064\ \si{s^{-1}}$\\ 
+		$k_2^-$ & Reverse rate constant of reaction R7 & $36355.3201\ \si{s^{-1}}$\\ 
+		$k_3^+$ & Forward rate constant of reaction R13 & $194.4506\ \si{s^{-1}}$\\ 
+		$k_3^-$ & Reverse rate constant of reaction R13 & $281037.2758\ \si{mM^{-2}s^{-1}}$\\ 
+		$k_4^+$ & Forward rate constant of reaction R15 & $30629.8836\ \si{s^{-1}}$\\ 
+		$k_4^-$ & Reverse rate constant of reaction R15 & $1.574\times 10^{6}\ \si{s^{-1}}$\\ 
+		$K_{\text{d,Nai}}^0$ & Voltage-dependent dissociation constant of intracellular $\mathrm{Na^+}$  & $579.7295\ \si{mM}$\\ 
+		$K_{\text{d,Nae}}^0$ & Voltage-dependent dissociation constant of extracellular $\mathrm{Na^+}$ & $0.034879\ \si{mM}$\\ 
+		$K_{\text{d,Nai}}$ & Voltage-independent dissociation constant of intracellular $\mathrm{Na^+}$ & $5.6399\ \si{mM}$\\ 
+		$K_{\text{d,Nae}}$ & Voltage-independent dissociation constant of extracellular $\mathrm{Na^+}$  & $10616.9377\ \si{mM}$\\ 
+		$K_{\text{d,Ki}}$ & Dissociation constant of intracellular $\mathrm{K^+}$ & $16794.976\ \si{mM}$\\ 
+		$K_{\text{d,Ke}}$ & Dissociation constant of extracellular $\mathrm{K^+}$ & $1.0817\ \si{mM}$\\ 
+		$K_{\text{d,MgATP}}$ & Dissociation constant of MgATP & $140.3709\ \si{mM}$\\ 
+		$\Delta$ & Charge translocated by reaction R5 & $-0.0550$ \\
+		Pump density & Number of pumps per $\si{\mu m^2}$  & $1360.2624\ \si{\mu m^{-2}}$  \\ \bottomrule& 
+	\end{tabular}
+	\egroup
+	\label{tab:Terkildsen_parameters}
+\end{table}
+
+\begin{table}[H]
+	\caption{\textbf{Parameters for the bond graph version of the updated cardiac Na$^+$/K$^+$ ATPase model.} Parameters were derived by using an intracellular volume of 38pL and an extracellular volume of 5.182pL. Refer to \autoref{fig:Terkildsen_NaK} for the bond graph schematic.}
+	\centering
+	\begin{tabular}{cl c l}
+		\toprule
+		\textbf{Component} & \textbf{Description}& \textbf{Parameter} & \textbf{Value} \\ \midrule
+		R1 & Reaction R1 & $\kappa_1$ & $ 330.5462\ \si{fmol/s} $\\ 
+		R2 & Reaction R2 & $\kappa_2$ & $ 132850.9145\ \si{fmol/s} $\\ 
+		R3 & Reaction R3 & $\kappa_3$ & $ 200356.0223\ \si{fmol/s} $\\ 
+		R4 & Reaction R4 & $\kappa_4$ & $ 2238785.3951\ \si{fmol/s} $\\ 
+		R5 & Reaction R5 & $\kappa_5$ & $ 10787.9052\ \si{fmol/s} $\\ 
+		R6 & Reaction R6 & $\kappa_6$ & $ 15.3533\ \si{fmol/s} $\\ 
+		R7 & Reaction R7 & $\kappa_7$ & $ 2.3822\ \si{fmol/s} $\\ 
+		R8 & Reaction R8 & $\kappa_8$ & $ 2.2855\ \si{fmol/s} $\\ 
+		R9 & Reaction R9 & $\kappa_9$ & $ 1540.1349\ \si{fmol/s} $\\ 
+		R10 & Reaction R10 & $\kappa_{10}$ & $ 259461.6507\ \si{fmol/s} $\\ 
+		R11 & Reaction R11 & $\kappa_{11}$ & $ 172042.3334\ \si{fmol/s} $\\ 
+		R12 & Reaction R12 & $\kappa_{12}$ & $ 6646440.3909\ \si{fmol/s} $\\ 
+		R13 & Reaction R13 & $\kappa_{13}$ & $ 597.4136\ \si{fmol/s} $\\ 
+		R14 & Reaction R14 & $\kappa_{14}$ & $ 70.9823\ \si{fmol/s} $\\ 
+		R15 & Reaction R15 & $\kappa_{15}$ & $ 0.015489\ \si{fmol/s} $\\ 
+		$\text{P}_1$ & Pump state ATP--E\textsubscript{i} K\textsubscript{2}
+		 & $K_1$ & $101619537.2009\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_2$ & Pump state ATP--E\textsubscript{i} K\textsubscript{1}
+		 & $K_2$ & $63209.8623\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_3$ & Pump state ATP--E\textsubscript{i}
+		 & $K_3$ & $157.2724\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_4$ & Pump state ATP--E\textsubscript{i} Na\textsubscript{1}
+		 & $K_4$ & $14.0748\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_5$ & Pump state ATP--E\textsubscript{i} Na\textsubscript{2}
+		 & $K_5$ & $5.0384\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_6$ & Pump state ATP--E\textsubscript{i} Na\textsubscript{3}
+		 & $K_6$ & $92.6964\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_7$ & Pump state P--E\textsubscript{i} (Na\textsubscript{3})
+		 & $K_7$ & $4854.5924\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_8$ & Pump state P--E\textsubscript{e} Na\textsubscript{3}
+		 & $K_8$ & $15260.9786\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_9$ & Pump state P--E\textsubscript{e} Na\textsubscript{2}
+		 & $K_9$ & $13787022.8009\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_{10}$ & Pump state P--E\textsubscript{e} Na\textsubscript{1}
+		 & $K_{10}$ & $20459.5509\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_{11}$ & Pump state P--E\textsubscript{e}
+		 & $K_{11}$ & $121.4456\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_{12}$ & Pump state P--E\textsubscript{e} K\textsubscript{1}
+		 & $K_{12}$ & $3.1436\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_{13}$ & Pump state P--E\textsubscript{e} K\textsubscript{2}
+		 & $K_{13}$ & $0.32549\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_{14}$ & Pump state E\textsubscript{e} (K\textsubscript{2})
+		& $K_{14}$ & $156.3283\ \si{fmol^{-1}}$ \\ 
+		$\text{P}_{15}$ & Pump state ATP--Ee (K\textsubscript{2})
+		& $K_{15}$ & $1977546.8577\ \si{fmol^{-1}}$ \\ 
+		Ki & Intracellular $\text{K}_\text{i}^+$ & $K_\text{Ki}$ & $0.0012595\ \si{fmol^{-1}}$ \\ 
+		Ke & Extracellular $\text{K}_\text{e}^+$ & $K_\text{Ke}$ & $0.009236\ \si{fmol^{-1}}$ \\ 
+		Nai & Intracellular $\text{Na}_\text{i}^+$ & $K_\text{Nai}$ & $0.00083514\ \si{fmol^{-1}}$ \\ 
+		Nae & Extracellular $\text{Na}_\text{e}^+$ & $K_\text{Nae}$ & $0.0061242\ \si{fmol^{-1}}$ \\ 
+		$\text{MgATP}$ & Intracellular MgATP & $K_\text{MgATP}$ & $2.3715\ \si{fmol^{-1}}$ \\ 
+		$\text{MgADP}$ & Intracellular MgADP & $K_\text{MgADP}$ & $7.976 \times 10^{-5} \ \si{fmol^{-1}}$ \\ 
+		$\text{P}_\text{i}$ & Free inorganic phosphate & $K_\text{Pi}$ & $0.04565\ \si{fmol^{-1}}$ \\ 
+		H & Intracellular $\text{H}^+$ & $K_\text{H}$ & $0.04565\ \si{fmol^{-1}}$ \\ 
+		mem & Membrane capacitance & $C_m$ & $153400\ \si{fF}$ \\
+		zF{\_}5 & Charge translocated by R5 & $z_5$ & $-0.0550$ \\
+		zF{\_}8 & Charge translocated by R8 & $z_8$ & $-0.9450$ \\ \bottomrule& & 
+	\end{tabular}
+	\label{tab:bg_parameters}
+\end{table}
+
+\newpage
+\section{Bond graph model structure}
+\label{sec:BG_structure}
+\begin{figure}[H]
+	\centering
+	\includegraphics[width=\linewidth]{Terkildsen_NaK_BG_full.eps}
+	\caption{\textbf{Bond graph structure of the cardiac Na$^+$/K$^+$ ATPase model.} Pump states are coloured in blue, and reactions are coloured in green. The names for these components are consistent with their labels in \autoref{fig:NaK_scheme}.}
+	\label{fig:Terkildsen_NaK}
+\end{figure}
+\end{document}
