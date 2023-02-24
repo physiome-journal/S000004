@@ -25,6 +25,9 @@ project:
     - electrophysiology
     - thermodynamics
     - bond graph
+  numbering:
+    heading_2: true
+    heading_3: true
 site:
   # title:
   projects:
