@@ -1,6 +1,6 @@
 version: 1
 project:
-  title: 'The cardiac Na+/K+ ATPase: An updated, thermodynamically consistent model'
+  title: 'The cardiac Na⁺/K⁺ ATPase: An updated, thermodynamically consistent model'
   authors:
     - name: Michael Pan
       affiliations:
