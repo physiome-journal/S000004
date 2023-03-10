@@ -3,23 +3,44 @@ project:
   title: 'The cardiac Na⁺/K⁺ ATPase: An updated, thermodynamically consistent model'
   authors:
     - name: Michael Pan
+      orcid: 0000-0002-8978-7350
       affiliations:
-        - Systems Biology Laboratory, School of Mathematics and Statistics, and Department of Biomedical Engineering, University of Melbourne, Parkville, Victoria 3010, Australia.
+        - >-
+          Systems Biology Laboratory, School of Mathematics and Statistics, and
+          Department of Biomedical Engineering, University of Melbourne,
+          Parkville, Victoria 3010, Australia.
       corresponding: true
       email: pan.m@unimelb.edu.au
     - name: Peter J. Gawthrop
+      orcid: 0000-0002-6029-515X
       affiliations:
-        - Systems Biology Laboratory, School of Mathematics and Statistics, and Department of Biomedical Engineering, University of Melbourne, Parkville, Victoria 3010, Australia.
+        - >-
+          Systems Biology Laboratory, School of Mathematics and Statistics, and
+          Department of Biomedical Engineering, University of Melbourne,
+          Parkville, Victoria 3010, Australia.
     - name: Joseph Cursons
+      orcid: 0000-0002-5053-4540
       affiliations:
-        - Bioinformatics Division, Walter and Eliza Hall Institute of Medical Research, Parkville, Victoria 3052, Australia.
+        - >-
+          Bioinformatics Division, Walter and Eliza Hall Institute of Medical
+          Research, Parkville, Victoria 3052, Australia.
     - name: Kenneth Tran
+      orcid: 0000-0002-5121-1735
       affiliations:
-        - Auckland Bioengineering Institute, University of Auckland, Auckland, New Zealand
+        - >-
+          Auckland Bioengineering Institute, University of Auckland, Auckland,
+          New Zealand
     - name: Edmund J. Crampin
+      orcid: 0000-0001-6569-9543
       affiliations:
-        - Systems Biology Laboratory, School of Mathematics and Statistics, and Department of Biomedical Engineering, University of Melbourne, Parkville, Victoria 3010, Australia.
-        - ARC Centre of Excellence in Convergent Bio-Nano Science and Technology, Melbourne School of Engineering, University of Melbourne, Parkville, Victoria 3010, Australia.
+        - >-
+          Systems Biology Laboratory, School of Mathematics and Statistics, and
+          Department of Biomedical Engineering, University of Melbourne,
+          Parkville, Victoria 3010, Australia.
+        - >-
+          ARC Centre of Excellence in Convergent Bio-Nano Science and
+          Technology, Melbourne School of Engineering, University of Melbourne,
+          Parkville, Victoria 3010, Australia.
   keywords:
     - systems biology
     - electrophysiology
@@ -28,8 +49,12 @@ project:
   numbering:
     heading_2: true
     heading_3: true
+  date: 2020/08/27
+  doi: 10.36903/physiome.12871070
+  open_access: true
+  license: CC-BY-4.0
 site:
-  # title:
+  title: 'The cardiac Na⁺/K⁺ ATPase: An updated, thermodynamically consistent model'
   projects:
     - slug: S000004
       path: .
