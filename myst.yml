@@ -49,6 +49,7 @@ project:
   numbering:
     heading_2: true
     heading_3: true
+  subject: Retrospective
   date: 2020/08/27
   doi: 10.36903/physiome.12871070
   open_access: true
