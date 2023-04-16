@@ -1,6 +1,15 @@
 version: 1
 project:
   title: 'The cardiac Na⁺/K⁺ ATPase: An updated, thermodynamically consistent model'
+  description: >-
+    The Na⁺/K⁺ ATPase is an essential component of cardiac electrophysiology,
+    maintaining physiological Na⁺ and K⁺ concentrations over successive heart
+    beats. Terkildsen et al. (2007) developed a model of the ventricular myocyte
+    Na⁺/K⁺ ATPase to study extracellular potassium accumulation during
+    ischaemia, demonstrating the ability to recapitulate a wide range of
+    experimental data, but unfortunately there was no archived code associated
+    with the original manuscript.
+  thumbnail: thumbnail.png
   authors:
     - name: Michael Pan
       orcid: 0000-0002-8978-7350
