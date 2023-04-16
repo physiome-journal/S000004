@@ -54,6 +54,24 @@ project:
   doi: 10.36903/physiome.12871070
   open_access: true
   license: CC-BY-4.0
+  editors:
+    - name: Karin Lundengård
+      orcid: 0000-0001-7600-8218
+      role: Editor
+      affiliations:
+        - >-
+          Integrative Systems Biology, Department of Biomedical Engineering,
+          Linköping University, Linköping, Sweden
+    - name: Anand K. Rampadarath
+      orcid: 0000-0001-8830-6212
+      role: Curator
+      affiliations:
+        - Auckland Bioengineering Institute, University of Auckland, New Zealand
+  history:
+    - date: 2020/08/25
+      type: accepted
+    - date: 2020/08/27
+      type: published
 site:
   title: 'The cardiac Na⁺/K⁺ ATPase: An updated, thermodynamically consistent model'
   projects:
