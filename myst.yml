@@ -83,10 +83,6 @@ project:
       type: published
 site:
   title: 'The cardiac Na⁺/K⁺ ATPase: An updated, thermodynamically consistent model'
-  projects:
-    - slug: S000004
-      path: .
-  nav: []
   actions:
     - title: paper
       url: Pan2020PhysiomeS000004.pdf
@@ -96,4 +92,5 @@ site:
       static: true
     - title: primary
       url: https://doi.org/10.1152/ajpheart.00771.2007
-  domains: []
+  domains:
+    - physiome-S000004.curve.space
